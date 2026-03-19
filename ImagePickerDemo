@@ -1,0 +1,106 @@
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+void runDemo() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ImagePickerDemo(),
+    );
+  }
+}
+
+class ImagePickerDemo extends StatefulWidget {
+  const ImagePickerDemo({super.key});
+
+  @override
+  State<ImagePickerDemo> createState() => _ImagePickerDemoState();
+}
+
+class _ImagePickerDemoState extends State<ImagePickerDemo> {
+
+  Uint8List? _imageBytes;
+  final ImagePicker _picker = ImagePicker();
+
+  /// Capture image from camera
+  Future<void> captureImage() async {
+    if (kIsWeb) {
+      // Camera not fully supported on web, use gallery instead
+      return;
+    }
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.camera);
+
+    if (pickedImage != null) {
+      final bytes = await pickedImage.readAsBytes();
+      setState(() {
+        _imageBytes = bytes;
+      });
+    }
+  }
+
+  /// Pick image from gallery
+  Future<void> pickFromGallery() async {
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      final bytes = await pickedImage.readAsBytes();
+      setState(() {
+        _imageBytes = bytes;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+
+      appBar: AppBar(
+        title: const Text("Camera & Gallery Demo"),
+        centerTitle: true,
+      ),
+
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+
+            /// Image Display
+            _imageBytes != null
+                ? Image.memory(
+                    _imageBytes!,
+                    height: 200,
+                  )
+                : const Text("No Image Selected"),
+
+            const SizedBox(height: 30),
+
+            /// Camera Button
+            ElevatedButton(
+              onPressed: captureImage,
+              child: const Text("Capture Image (Camera)"),
+            ),
+
+            const SizedBox(height: 10),
+
+            /// Gallery Button
+            ElevatedButton(
+              onPressed: pickFromGallery,
+              child: const Text("Select From Gallery"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
